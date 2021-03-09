@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Socket.IO chat</title>
+    <style>
+        body {
+            margin: 0;
+            padding-bottom: 3rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        #message_form {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.25rem;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            height: 3rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+
+        #user_form {
+            position: relative;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 3rem;
+            box-sizing: border-box;
+            padding: 0.6rem;
+            background: rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: center;
+        }
+
+        #user_input {
+            justify-self: center;
+            padding: 0 2rem;
+            border: none;
+            border-radius: 2rem;
+
+        }
+
+        #message_input {
+            border: none;
+            padding: 0 1rem;
+            flex-grow: 1;
+            border-radius: 2rem;
+            margin: 0.25rem;
+        }
+
+        #message_input:focus {
+            outline: none;
+        }
+
+        #message_form>button {
+            background: #333;
+            border: none;
+            padding: 0 1rem;
+            margin: 0.25rem;
+            border-radius: 3px;
+            outline: none;
+            color: #fff;
+        }
+
+        #messages {
+            list-style-type: disc;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages>li {
+            padding: 0.5rem 1rem;
+        }
+
+        #messages>li:nth-child(odd) {
+            background: #efefef;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Socket.IO chat</h1>
+
+    <form id="form" action="">
+        <div id="user_form" action="">
+            <input id="user_input" placeholder="Digite um usuário" />
+        </div>
+
+        <ul id="messages"></ul>
+
+        <div id="message_form">
+            <input id="message_input" autocomplete="off" placeholder="Digite uma mensagem" />
+            <button>Send</button>
+        </div>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const form = document.getElementById('form');
+
+        const messages = document.getElementById('messages');
+        const messageForm = document.getElementById('message_form');
+        const messageInput = document.getElementById('message_input');
+
+        const userForm = document.getElementById('user_form');
+        const userInput = document.getElementById('user_input');
+
+        const createMessage = (msgData) => {
+            let listItem = document.createElement('li');
+            let user = document.createElement('strong');
+            let message = document.createElement('p');
+
+            user.textContent = msgData.user;
+            message.textContent = ` : ${msgData.message}`;
+
+            listItem.appendChild(user)
+            listItem.appendChild(message)
+
+            listItem.style.display = "flex";
+            listItem.style.flexDirection = "horizontal";
+            listItem.style.alignItems = "center";
+
+
+            messages.appendChild(listItem);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('submit');
+
+            const userMessage = messageInput.value;
+            const userName = userInput.value;
+
+            let messageObject = {
+                user: userName,
+                message: userMessage,
+            }
+
+            if (userMessage && userName) {
+                socket.emit('chat message', messageObject);
+
+                messageInput.value = '';
+            }
+        });
+
+        socket.on('previous messages', (messagesDatas) => {
+            for (messageData of messagesDatas) {
+                createMessage(messageData);
+            }
+        });
+
+        socket.on('chat message', (msgData) => createMessage(msgData));
+
+    </script>
+</body>
+
+</html>
